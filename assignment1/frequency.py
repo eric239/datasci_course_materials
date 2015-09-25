@@ -2,10 +2,6 @@ import json
 import re
 import sys
 
-def load_sent(fname):
-    with open(fname) as sent_file:
-        return { term: int(score) for term, score in [ line.split('\t') for line in sent_file ] }
-
 def get_text(line):
     return json.loads(line).get('text', '')
 
@@ -16,10 +12,15 @@ def tokenize(text):
     return filter(len, map(process_term, re.split(r'\s+', text.lower())))
 
 def main():
-    sent_dict = load_sent(sys.argv[1])
-    with open(sys.argv[2]) as tweets_file:
+    terms_occ = {}
+    with open(sys.argv[1]) as tweets_file:
         for line in tweets_file:
-            print sum(map(lambda token: sent_dict.get(token, 0), tokenize(get_text(line))))
+            for term in tokenize(get_text(line)):
+                terms_occ[term] = terms_occ.get(term, 0.0) + 1
+    total_occ = sum(terms_occ.viewvalues())
+    for term, occ in terms_occ.viewitems():
+        print term.encode('utf-8'), occ / total_occ
+
 
 
 if __name__ == '__main__':
